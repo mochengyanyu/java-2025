@@ -1,6 +1,7 @@
 package com.wk.local.message.service;
 
 
+import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ReflectUtil;
 import cn.hutool.extra.spring.SpringUtil;
@@ -18,8 +19,12 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import javax.validation.constraints.NotNull;
 import java.lang.reflect.Method;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 
@@ -33,6 +38,8 @@ import java.util.stream.Collectors;
 public class SecureInvokeService {
 
     public static final double RETRY_INTERVAL_MINUTES = 2D;
+
+    public static final int RETRY_INTERVAL_MINUTES_INT = 2;
 
     private final SecureInvokeRecordDao secureInvokeRecordDao;
 
@@ -57,6 +64,7 @@ public class SecureInvokeService {
         update.setFailReason(errorMsg);
         update.setNextRetryTime(getNextRetryTime(retryTimes));
         if (retryTimes > record.getMaxRetryTimes()) {
+            update.setRetryTimes(retryTimes);
             update.setStatus(SecureInvokeRecord.STATUS_FAIL);
         } else {
             update.setRetryTimes(retryTimes);
@@ -64,9 +72,13 @@ public class SecureInvokeService {
         secureInvokeRecordDao.updateById(update);
     }
 
-    private Date getNextRetryTime(Integer retryTimes) {//或者可以采用退避算法
-        double waitMinutes = Math.pow(RETRY_INTERVAL_MINUTES, retryTimes);//重试时间指数上升 2m 4m 8m 16m
-        return DateUtil.offsetMinute(new Date(), (int) waitMinutes);
+    private LocalDateTime getNextRetryTime(Integer retryTimes) {//或者可以采用退避算法
+        double waitMinutes = Math.pow(RETRY_INTERVAL_MINUTES_INT, retryTimes);//重试时间指数上升 2m 4m 8m 16m
+        LocalDateTime dataTime = LocalDateTime.now();
+        // dataTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        Duration duration = Duration.ofMinutes((int)waitMinutes);
+        LocalDateTime newDataTime = dataTime.plus(duration);
+        return newDataTime;
     }
 
     private void removeRecord(Long id) {
@@ -116,8 +128,8 @@ public class SecureInvokeService {
             method.invoke(bean, args);
             //执行成功更新状态
             removeRecord(record.getId());
-        } catch (Throwable e) {
-            log.error("SecureInvokeService invoke fail", e);
+        } catch (Exception e) {
+            log.error("SecureInvokeService invoke fail{}", e);
             //执行失败，等待下次执行
             retryRecord(record, e.getMessage());
         } finally {
@@ -129,11 +141,14 @@ public class SecureInvokeService {
     private Object[] getArgs(SecureInvokeDTO secureInvokeDTO, List<Class<?>> parameterClasses) {
         JsonNode jsonNode = JsonUtils.toJsonNode(secureInvokeDTO.getArgs());
         Object[] args = new Object[jsonNode.size()];
-        for (int i = 0; i < jsonNode.size(); i++) {
-            Class<?> aClass = parameterClasses.get(i);
-            args[i] = JsonUtils.nodeToValue(jsonNode.get(i), aClass);
+        if (Objects.nonNull(args) && args.length>0){
+            for (int i = 0; i < jsonNode.size(); i++) {
+                Class<?> aClass = parameterClasses.get(i);
+                args[i] = JsonUtils.nodeToValue(jsonNode.get(i), aClass);
+            }
+            return args;
         }
-        return args;
+        return null;
     }
 
     @NotNull

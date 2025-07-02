@@ -1,7 +1,9 @@
 package com.wk.local.message.aspect;
 
+import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
-import com.wk.local.message.annotation.SecureInvoke;
+import com.wk.local.message.annotation.LocalMessageTable;
+//import com.wk.local.message.annotation.SecureInvoke;
 import com.wk.local.message.domain.dto.SecureInvokeDTO;
 import com.wk.local.message.domain.entity.SecureInvokeRecord;
 import com.wk.local.message.service.SecureInvokeHolder;
@@ -19,6 +21,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.lang.reflect.Method;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -37,9 +42,9 @@ public class SecureInvokeAspect {
     @Autowired
     private SecureInvokeService secureInvokeService;
 
-    @Around("@annotation(secureInvoke)")
-    public Object around(ProceedingJoinPoint joinPoint, SecureInvoke secureInvoke) throws Throwable {
-        boolean async = secureInvoke.async();
+    @Around("@annotation(localMessageTable)")
+    public Object around(ProceedingJoinPoint joinPoint, LocalMessageTable localMessageTable) throws Throwable {
+        boolean async = localMessageTable.async();
         boolean inTransaction = TransactionSynchronizationManager.isActualTransactionActive();
         //非事务状态，直接执行，不做任何保证。
         if (SecureInvokeHolder.isInvoking() || !inTransaction) {
@@ -53,10 +58,17 @@ public class SecureInvokeAspect {
                 .methodName(method.getName())
                 .parameterTypes(JsonUtils.toStr(parameters))
                 .build();
+        // DateTime dateTime = DateUtil.offsetMinute(new Date(), (int) SecureInvokeService.RETRY_INTERVAL_MINUTES);
+        LocalDateTime dataTime = LocalDateTime.now();
+        dataTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        //往后一定两分钟
+        Duration duration = Duration.ofMinutes(2);
+        LocalDateTime newDataTime = dataTime.plus(duration);
+        // .nextRetryTime(DateUtil.offsetMinute(new Date(), (int) SecureInvokeService.RETRY_INTERVAL_MINUTES))
         SecureInvokeRecord record = SecureInvokeRecord.builder()
                 .secureInvokeDTO(dto)
-                .maxRetryTimes(secureInvoke.maxRetryTimes())
-                .nextRetryTime(DateUtil.offsetMinute(new Date(), (int) SecureInvokeService.RETRY_INTERVAL_MINUTES))
+                .maxRetryTimes(localMessageTable.maxRetryTimes())
+                .nextRetryTime(newDataTime)
                 .build();
         secureInvokeService.invoke(record, async);
         return null;

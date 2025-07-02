@@ -1,6 +1,5 @@
 package com.wk.local.message.services.impl;
 
-import com.wk.local.message.annotation.SecureInvoke;
 import com.wk.local.message.rpc.TestRpc;
 import com.wk.local.message.services.IUserService;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +17,7 @@ public class UserServiceImpl implements IUserService {
     @Override
     @Transactional
     public String saveUser(String message) {
-        testRpc.getRpcValue();
+        testRpc.getRpcValue(message);
         log.info("保存成功");
         return "保存成功";
     }

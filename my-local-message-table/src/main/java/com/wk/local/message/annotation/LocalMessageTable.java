@@ -8,7 +8,7 @@ import java.lang.annotation.*;
 @Documented
 @Retention(RetentionPolicy.RUNTIME)//运行时生效
 @Target(ElementType.METHOD)//作用在方法上
-public @interface SecureInvoke {
+public @interface LocalMessageTable {
 
     /**
      * 默认3次

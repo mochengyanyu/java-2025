@@ -1,6 +1,7 @@
 package com.wk.local.message.domain.entity;
 
 
+import cn.hutool.core.date.DateTime;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -12,6 +13,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 /**
@@ -44,8 +46,8 @@ public class SecureInvokeRecord {
      * 下一次重试的时间
      */
     @TableField("next_retry_time")
-    @Builder.Default
-    private Date nextRetryTime = new Date();
+    private LocalDateTime nextRetryTime;
+
     /**
      * 已经重试的次数
      */

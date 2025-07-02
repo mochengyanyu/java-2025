@@ -8,6 +8,8 @@ import com.wk.local.message.mapper.SecureInvokeRecordMapper;
 import com.wk.local.message.service.SecureInvokeService;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 
@@ -20,12 +22,15 @@ import java.util.List;
 public class SecureInvokeRecordDao extends ServiceImpl<SecureInvokeRecordMapper, SecureInvokeRecord> {
 
     public List<SecureInvokeRecord> getWaitRetryRecords() {
-        Date now = new Date();
+        // Date now = new Date();
+        LocalDateTime now = LocalDateTime.now();
         //查2分钟前的失败数据。避免刚入库的数据被查出来
-        DateTime afterTime = DateUtil.offsetMinute(now, -(int) SecureInvokeService.RETRY_INTERVAL_MINUTES);
+        // DateTime afterTime = DateUtil.offsetMinute(now, -(int) SecureInvokeService.RETRY_INTERVAL_MINUTES);
+        // 查2分钟前的失败数据。避免刚入库的数据被查出来
+        LocalDateTime afterTime = now.minusMinutes(SecureInvokeService.RETRY_INTERVAL_MINUTES_INT);
         return lambdaQuery()
                 .eq(SecureInvokeRecord::getStatus, SecureInvokeRecord.STATUS_WAIT)
-                .lt(SecureInvokeRecord::getNextRetryTime, new Date())
+                .lt(SecureInvokeRecord::getNextRetryTime, LocalDateTime.now())
                 .lt(SecureInvokeRecord::getCreateTime, afterTime)
                 .list();
     }
