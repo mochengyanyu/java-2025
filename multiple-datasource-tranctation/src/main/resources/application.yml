@@ -1,0 +1,49 @@
+server:
+  port: 8785
+spring:
+  datasource:
+    type: com.alibaba.druid.pool.xa.DruidXADataSource
+    druid:
+      db1:
+        uniqueResourceName: primaryDB
+        name: primaryDBConfig
+        driverClassName: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://localhost:3306/db_user?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=UTC
+        username: root
+        password: 0
+        filters: stat
+        maxActive: 20
+        initialSize: 1
+        maxWait: 60000
+        minIdle: 1
+        timeBetweenEvictionRunsMillis: 60000
+        minEvictableIdleTimeMillis: 300000
+        validationQuery: select 'x'
+        testWhileIdle: true
+        testOnBorrow: true
+        testOnReturn: true
+        poolPreparedStatements: true
+        maxOpenPreparedStatements: 20
+      db2:
+        uniqueResourceName: secondDB
+        name: secondDBConfig
+        driverClassName: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://localhost:3306/db_user2?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=UTC
+        username: root
+        password: 0
+        filters: stat
+        maxActive: 20
+        initialSize: 1
+        maxWait: 60000
+        minIdle: 1
+        timeBetweenEvictionRunsMillis: 60000
+        minEvictableIdleTimeMillis: 300000
+        validationQuery: select 'x'
+        testWhileIdle: true
+        testOnBorrow: true
+        testOnReturn: true
+        poolPreparedStatements: true
+        maxOpenPreparedStatements: 20
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
