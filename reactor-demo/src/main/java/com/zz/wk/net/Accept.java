@@ -42,14 +42,15 @@ public class Accept implements Runnable{
         }
     }
 
+
     public int nextIndex(){
         int andIncrement = index.getAndIncrement();
-        if (andIncrement > SUB_REACTOR_COUNT){
+        if (andIncrement >= 16){
             index.set(0);
-            return 0;
+            int newIndex = index.getAndIncrement();
+            return newIndex;
         }
-        int nextIndex = andIncrement % (subReactors.length);
-        return nextIndex;
+        return andIncrement;
     }
 
     @Override

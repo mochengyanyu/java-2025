@@ -22,7 +22,7 @@ public class TestRpc {
         int andIncrement = index.getAndIncrement();
         index.getAndIncrement();
         log.info("andIncrement = {}",andIncrement);
-        if (andIncrement<2){
+        if (andIncrement<100){
             throw new RuntimeException("error");
         }
         log.info("getRpcValue");
